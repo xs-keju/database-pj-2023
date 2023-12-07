@@ -19,4 +19,7 @@ public class ShopService {
         }
         return null;
     }
+    public Shop getShopById(Integer id){
+        return shopRepository.findById(id).orElse(null);
+    }
 }
