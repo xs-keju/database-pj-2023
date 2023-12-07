@@ -3,14 +3,15 @@ package com.example.backend0.controller;
 import com.example.backend0.entity.Account;
 import com.example.backend0.entity.Shop;
 import com.example.backend0.entity.User;
+import com.example.backend0.jwt.JwtCreate;
 import com.example.backend0.result.Result;
 import com.example.backend0.result.ResultFactory;
 import com.example.backend0.service.AccountService;
 import com.example.backend0.service.ShopService;
 import com.example.backend0.service.UserService;
 import com.example.backend0.util.VariableDefine;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,7 +37,7 @@ public class UserController {
             return ResultFactory.buildFailedResult("用户类型错误");
         }
         // 判断用户名是否重复
-        if(accountService.sameAccountName(accountName)){
+        if(accountService.accountNameIsPresent(accountName)){
             return ResultFactory.buildFailedResult("该账号名已被注册");
         }
         // 准备account类
@@ -96,7 +97,38 @@ public class UserController {
         }
         return ResultFactory.buildSuccessResult(account_saved);
     }
+    @PostMapping("/user/login")
+    public Result login(@RequestParam("accountName")String accountName,@RequestParam("password")String password){
+        if(accountName==null || password==null){
+            return ResultFactory.buildFailedResult("参数缺失");
+        }
+        if(accountService.rightAccount(accountName,password)){
+            Account account=accountService.getAccountByAccountName(accountName);
+            if(account==null){
+                ResultFactory.buildFailedResult("后台错误");
+            }
+            String token= JwtCreate.create(account.getAccountName(),account.getType(),account.getInfoID(),VariableDefine.illegalTime(),VariableDefine.signature());
+            return ResultFactory.buildSuccessResult(new LogInReturn(account.getAccountName(),account.getType(),account.getInfoID(),token));
+        }
+        else{
+            return ResultFactory.buildFailedResult("密码错误");
+        }
+    }
     public static boolean validPhone(String phone){
         return true;// todo
+    }
+}
+@Data
+class LogInReturn{
+    String accountName;
+    Integer type; // 0 管理员，1用户，2商户
+    Integer infoID;
+    String token;
+
+    public LogInReturn(String accountName, Integer type, Integer infoID, String token) {
+        this.accountName = accountName;
+        this.type = type;
+        this.infoID = infoID;
+        this.token = token;
     }
 }

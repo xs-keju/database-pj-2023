@@ -10,7 +10,7 @@ import java.util.UUID;
  * @Description
  **/
 public class JwtCreate {
-    public static String create(String username, String userType, Integer userId, long illegalTime, String signature) {// 根据传入的信息创建jwt字符串，illegalTIme为秒数
+    public static String create(String username, Integer userType, Integer userId, long illegalTime, String signature) {// 根据传入的信息创建jwt字符串，illegalTIme为秒数
         JwtBuilder jwtBuilder = Jwts.builder();
         long time = 1000 * illegalTime;
         String token = jwtBuilder.
