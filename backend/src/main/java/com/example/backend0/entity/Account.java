@@ -18,4 +18,5 @@ public class Account {
     String password;
     Integer type; // 0 管理员，1用户，2商户
     Integer infoID;
+
 }

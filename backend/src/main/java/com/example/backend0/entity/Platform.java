@@ -14,5 +14,5 @@ public class Platform {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "platform_generator")
     @SequenceGenerator(name = "platform_generator",sequenceName = "platform_seq", allocationSize = 1)
     Integer ID;
-    Integer platformName;
+    String platformName;
 }
