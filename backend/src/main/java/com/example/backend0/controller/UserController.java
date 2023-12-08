@@ -114,6 +114,15 @@ public class UserController {
             return ResultFactory.buildFailedResult("密码错误");
         }
     }
+    @PostMapping("/createAdmin")
+    public Result createAdmin(){
+        Account admin=new Account();
+        admin.setInfoID(-1);
+        admin.setAccountName(VariableDefine.getAdminAccountName());
+        admin.setPassword(VariableDefine.getAdminAccountPassword());
+        admin.setType(VariableDefine.getTypeAdmin());
+        return ResultFactory.buildSuccessResult(accountService.save(admin));
+    }
     public static boolean validPhone(String phone){
         return true;// todo
     }

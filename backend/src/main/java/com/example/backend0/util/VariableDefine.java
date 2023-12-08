@@ -18,4 +18,6 @@ public class VariableDefine {
     public static Integer getTypeAdmin(){
         return 0;
     }
+    public static String getAdminAccountName(){return "admin";}
+    public static String getAdminAccountPassword(){return "123123";}
 }
