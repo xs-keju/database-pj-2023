@@ -39,6 +39,14 @@ public class UserController {
         if(accountService.sameAccountName(accountName)){
             return ResultFactory.buildFailedResult("该账号名已被注册");
         }
+        System.out.println(accountName);
+        System.out.println(type);
+        System.out.println(password);
+        System.out.println(userName);
+        System.out.println(age);
+        System.out.println(sex);
+        System.out.println(phone);
+
         // 准备account类
         Account account=new Account();
         account.setAccountName(accountName);
