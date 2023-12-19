@@ -13,7 +13,7 @@ public class FullProductInfoDTO {
     private String productName;
     private String shopName;
     private String shopAddress;
-    private String platFormName;
+    private String platformName;
     private String type;
     private Float currentPrice;
     private String productAddress;
@@ -25,12 +25,12 @@ public class FullProductInfoDTO {
     public FullProductInfoDTO() {
     }
 
-    public FullProductInfoDTO(Integer concreteProductID, String productName, String shopName, String shopAddress, String platFormName, String type, Float currentPrice, String productAddress, String productDate, String description) {
+    public FullProductInfoDTO(Integer concreteProductID, String productName, String shopName, String shopAddress, String platformName, String type, Float currentPrice, String productAddress, String productDate, String description) {
         this.concreteProductID = concreteProductID;
         this.productName = productName;
         this.shopName = shopName;
         this.shopAddress = shopAddress;
-        this.platFormName = platFormName;
+        this.platformName = platformName;
         this.type = type;
         this.currentPrice = currentPrice;
         this.productAddress = productAddress;

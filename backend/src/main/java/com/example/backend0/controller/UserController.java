@@ -145,8 +145,8 @@ public class UserController {
         Collect collect=new Collect();
         collect.setUserID(jwtBodyData.getId());
         collect.setConcreteProductID(concreteProductID);
-        if(minimumPrice==-1||minimumPrice<productService.getPartialProductByConcreteProductId(concreteProductID).getCurrentPrice()){
-            minimumPrice=productService.getPartialProductByConcreteProductId(concreteProductID).getCurrentPrice()+1;
+        if(minimumPrice==-1||minimumPrice>productService.getPartialProductByConcreteProductId(concreteProductID).getCurrentPrice()){
+            minimumPrice=productService.getPartialProductByConcreteProductId(concreteProductID).getCurrentPrice()-1;
         }
         collect.setMinimumPrice(minimumPrice);
         // todo获取默认值

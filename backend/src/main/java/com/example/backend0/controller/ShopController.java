@@ -52,7 +52,7 @@ public class ShopController {
         priceHistory.setDate(sqlDate);
         priceHistory.setConcreteProductID(((ConcreteProduct) res.getContents()).getID());
         priceHistoryRepository.save(priceHistory);
-        
+
         return ResultFactory.buildSuccessResult(res.getContents());
     }
 
