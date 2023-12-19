@@ -1,14 +1,15 @@
 package com.example.backend0.controller;
 
 import com.example.backend0.entity.Account;
+import com.example.backend0.entity.Collect;
 import com.example.backend0.entity.Shop;
 import com.example.backend0.entity.User;
+import com.example.backend0.jwt.JwtBodyData;
 import com.example.backend0.jwt.JwtCreate;
+import com.example.backend0.jwt.JwtParse;
 import com.example.backend0.result.Result;
 import com.example.backend0.result.ResultFactory;
-import com.example.backend0.service.AccountService;
-import com.example.backend0.service.ShopService;
-import com.example.backend0.service.UserService;
+import com.example.backend0.service.*;
 import com.example.backend0.util.VariableDefine;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,12 @@ public class UserController {
     UserService userService;
     @Autowired
     ShopService shopService;
+    @Autowired
+    CollectService collectService;
+    @Autowired
+    ProductService productService;
+    @Autowired
+    MessageService messageService;
     @PostMapping("/user/register")
     public Result register_com(@RequestParam("accountName") String accountName, @RequestParam("type")Integer type, @RequestParam("password")String password,
                                @RequestParam(value = "userName",required = false) String userName, @RequestParam(value = "age",required = false)Integer age, @RequestParam(value = "sex",required = false)String sex, @RequestParam(value = "phone",required = false)String phone,
@@ -123,6 +130,57 @@ public class UserController {
         admin.setType(VariableDefine.getTypeAdmin());
         return ResultFactory.buildSuccessResult(accountService.save(admin));
     }
+    @PostMapping("/user/favorite")
+    public Result createFavorite(@RequestParam("concreteProductID")Integer concreteProductID,@RequestParam("minimumPrice")Float minimumPrice,@RequestParam("token")String token){
+        if(concreteProductID==null||minimumPrice==null||token==null){
+            return ResultFactory.buildFailedResult("参数缺失");
+        }
+        JwtBodyData jwtBodyData= JwtParse.parse(token,VariableDefine.signature());
+        if(!jwtBodyData.getValidity().equals(VariableDefine.tokenValid())){
+            return ResultFactory.buildFailedResult("令牌失效");
+        }
+        if(!jwtBodyData.getType().equals(VariableDefine.getTypeUser())){
+            return ResultFactory.buildFailedResult("非用户操作");
+        }
+        Collect collect=new Collect();
+        collect.setUserID(jwtBodyData.getId());
+        collect.setConcreteProductID(concreteProductID);
+        if(minimumPrice==-1||minimumPrice<productService.getPartialProductByConcreteProductId(concreteProductID).getCurrentPrice()){
+            minimumPrice=productService.getPartialProductByConcreteProductId(concreteProductID).getCurrentPrice()+1;
+        }
+        collect.setMinimumPrice(minimumPrice);
+        // todo获取默认值
+        return ResultFactory.buildSuccessResult(collectService.save(collect));
+    }
+    @PostMapping("/user/favoritecheck")
+    public Result getFavoritesByUserID(@RequestParam("token")String token){
+        if(token==null){
+            return ResultFactory.buildFailedResult("参数缺失");
+        }
+        JwtBodyData jwtBodyData=JwtParse.parse(token,VariableDefine.signature());
+        if(!jwtBodyData.getValidity().equals(VariableDefine.tokenValid())){
+            return ResultFactory.buildFailedResult("令牌失效");
+        }
+        if(!jwtBodyData.getType().equals(VariableDefine.getTypeUser())){
+            return ResultFactory.buildFailedResult("非用户操作");
+        }
+        return ResultFactory.buildSuccessResult(collectService.getFavoritesByUserID(jwtBodyData.getId()));
+    }
+    @PostMapping("/usr/message")
+    public Result getMessage(@RequestParam("token")String token){
+        if(token==null){
+            return ResultFactory.buildFailedResult("参数缺失");
+        }
+        JwtBodyData jwtBodyData=JwtParse.parse(token,VariableDefine.signature());
+        if(!jwtBodyData.getValidity().equals(VariableDefine.tokenValid())){
+            return ResultFactory.buildFailedResult("令牌失效");
+        }
+        if(!jwtBodyData.getType().equals(VariableDefine.getTypeUser())){
+            return ResultFactory.buildFailedResult("非用户操作");
+        }
+        return ResultFactory.buildSuccessResult(messageService.getMessagesByUserID(jwtBodyData.getId()));
+    }
+
     public static boolean validPhone(String phone){
         return true;// todo
     }

@@ -5,6 +5,8 @@ import com.example.backend0.repository.PlatformRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * @ClassName PlatFormService
  * @Description
@@ -21,5 +23,8 @@ public class PlatformService {
     }
     public Platform getPlatformById(Integer id){
         return platformRepository.findById(id).orElse(null);
+    }
+    public List<Platform> findAll(){
+        return platformRepository.findAll();
     }
 }

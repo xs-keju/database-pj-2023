@@ -1,16 +1,19 @@
 package com.example.backend0.service;
 
+import com.example.backend0.dto.FullProductInfoDTO;
+import com.example.backend0.dto.PartialProductDTO;
+import com.example.backend0.dto.PriceHistoryDTO;
 import com.example.backend0.entity.ConcreteProduct;
 import com.example.backend0.entity.Platform;
 import com.example.backend0.entity.Product;
 import com.example.backend0.entity.Shop;
 import com.example.backend0.repository.ConcreteProductRepository;
-import com.example.backend0.repository.PlatformRepository;
+import com.example.backend0.repository.PriceHistoryRepository;
 import com.example.backend0.repository.ProductRepository;
-import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,15 +31,17 @@ public class ProductService {
     PlatformService platformService;
     @Autowired
     ShopService shopService;
-    public List<PartialProduct> getAllProductsWithPartialInfo(){
+    @Autowired
+    PriceHistoryRepository priceHistoryRepository;
+    public List<PartialProductDTO> getAllProductsWithPartialInfo(){
         List<ConcreteProduct> concreteProducts=concreteProductRepository.findAll();
-        List<PartialProduct> res=new ArrayList<>();
+        List<PartialProductDTO> res=new ArrayList<>();
         for(ConcreteProduct product:concreteProducts){
-            PartialProduct partialProduct=getPartialProductByConcreteProductId(product.getID());
-            if(partialProduct==null){
+            PartialProductDTO partialProductDTO =getPartialProductByConcreteProductId(product.getID());
+            if(partialProductDTO ==null){
                 return null;
             }
-            res.add(partialProduct);
+            res.add(partialProductDTO);
         }
         return res;
     }
@@ -61,7 +66,7 @@ public class ProductService {
     public Product getProductById(Integer id){
         return productRepository.findById(id).orElse(null);
     }
-    public PartialProduct getPartialProductByConcreteProductId(Integer id){
+    public PartialProductDTO getPartialProductByConcreteProductId(Integer id){
         ConcreteProduct concreteProduct=concreteProductRepository.findById(id).orElse(null);
         if(concreteProduct==null){
             return null;
@@ -78,13 +83,26 @@ public class ProductService {
         if(shop==null){
             return null;
         }
-        PartialProduct partialProduct=new PartialProduct();
-        partialProduct.setId(id);
-        partialProduct.setProductName(product.getProductName());
-        partialProduct.setShopName(shop.getShopName());
-        partialProduct.setPlatformName(platform.getPlatformName());
-        partialProduct.setType(product.getType());
-        partialProduct.setCurrentPrice(concreteProduct.getCurrentPrice());
-        return partialProduct;
+        PartialProductDTO partialProductDTO =new PartialProductDTO();
+        partialProductDTO.setId(id);
+        partialProductDTO.setProductName(product.getProductName());
+        partialProductDTO.setShopName(shop.getShopName());
+        partialProductDTO.setPlatformName(platform.getPlatformName());
+        partialProductDTO.setType(product.getType());
+        partialProductDTO.setCurrentPrice(concreteProduct.getCurrentPrice());
+        return partialProductDTO;
+    }
+    public FullProductInfoDTO findFullProductInfoByConcreteProductID(Integer concreteProductId){
+
+        return concreteProductRepository.findFullProductInfoByConcreteID(concreteProductId);
+    }
+    public List<PriceHistoryDTO> getPriceHistoryByYear(Integer concreteProductID, Date date){
+        return priceHistoryRepository.findPriceHistoryByYear(concreteProductID,date.toLocalDate().getYear());
+    }
+    public List<PriceHistoryDTO> getPriceHistoryByMonth(Integer concreteProductID, Date date){
+        return priceHistoryRepository.findPriceHistoryByMonth(concreteProductID,date.toLocalDate().getYear(),date.toLocalDate().getMonthValue());
+    }
+    public List<PriceHistoryDTO> getPriceHistoryByWeek(Integer concreteProductID, Date date){
+        return priceHistoryRepository.findPriceHistoryByWeek(concreteProductID,date);
     }
 }
