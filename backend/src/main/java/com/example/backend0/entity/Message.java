@@ -19,4 +19,5 @@ public class Message {
     Integer concreteProductID;
     Date date;
     Integer flag;// 0代表未查看，1代表已经确认，
+    Integer userID;
 }

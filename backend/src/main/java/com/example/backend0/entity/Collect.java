@@ -3,6 +3,8 @@ package com.example.backend0.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.sql.Date;
+
 /**
  * @ClassName Collect
  * @Description 用户收藏表
@@ -17,4 +19,5 @@ public class Collect {
     Integer userID;
     Integer concreteProductID;
     Float minimumPrice;
+    Date date;
 }

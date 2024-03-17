@@ -9,7 +9,7 @@ import lombok.Data;
  **/
 @Data
 @Entity
-public class ConcreteProduct {
+public class ConcreteProduct implements Comparable<ConcreteProduct>  {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "concrete_goods_generator")
     @SequenceGenerator(name = "concrete_goods_generator",sequenceName = "concrete_goods_seq", allocationSize = 1)
@@ -18,4 +18,15 @@ public class ConcreteProduct {
     Integer platformID;
     Integer productID;
     Float currentPrice;
+    Integer collectNum;
+
+    public ConcreteProduct() {
+        collectNum=0;
+    }
+
+    // 实现 compareTo 方法
+    @Override
+    public int compareTo(ConcreteProduct other) {
+        return Integer.compare(other.collectNum, this.collectNum); // 降序排序
+    }
 }

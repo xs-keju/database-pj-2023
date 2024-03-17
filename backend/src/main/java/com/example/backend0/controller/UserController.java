@@ -1,20 +1,22 @@
 package com.example.backend0.controller;
 
-import com.example.backend0.entity.Account;
-import com.example.backend0.entity.Shop;
-import com.example.backend0.entity.User;
+import com.example.backend0.entity.*;
+import com.example.backend0.jwt.JwtBodyData;
 import com.example.backend0.jwt.JwtCreate;
+import com.example.backend0.jwt.JwtParse;
+import com.example.backend0.repository.CollectRepository;
+import com.example.backend0.repository.ConcreteProductRepository;
 import com.example.backend0.result.Result;
 import com.example.backend0.result.ResultFactory;
-import com.example.backend0.service.AccountService;
-import com.example.backend0.service.ShopService;
-import com.example.backend0.service.UserService;
+import com.example.backend0.service.*;
 import com.example.backend0.util.VariableDefine;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.sql.Date;
 
 /**
  * @ClassName UserController
@@ -28,6 +30,16 @@ public class UserController {
     UserService userService;
     @Autowired
     ShopService shopService;
+    @Autowired
+    CollectService collectService;
+    @Autowired
+    ProductService productService;
+    @Autowired
+    MessageService messageService;
+    @Autowired
+    CollectRepository collectRepository;
+    @Autowired
+    ConcreteProductRepository concreteProductRepository;
     @PostMapping("/user/register")
     public Result register_com(@RequestParam("accountName") String accountName, @RequestParam("type")Integer type, @RequestParam("password")String password,
                                @RequestParam(value = "userName",required = false) String userName, @RequestParam(value = "age",required = false)Integer age, @RequestParam(value = "sex",required = false)String sex, @RequestParam(value = "phone",required = false)String phone,
@@ -40,14 +52,6 @@ public class UserController {
         if(accountService.accountNameIsPresent(accountName)){
             return ResultFactory.buildFailedResult("该账号名已被注册");
         }
-        System.out.println(accountName);
-        System.out.println(type);
-        System.out.println(password);
-        System.out.println(userName);
-        System.out.println(age);
-        System.out.println(sex);
-        System.out.println(phone);
-
         // 准备account类
         Account account=new Account();
         account.setAccountName(accountName);
@@ -131,8 +135,92 @@ public class UserController {
         admin.setType(VariableDefine.getTypeAdmin());
         return ResultFactory.buildSuccessResult(accountService.save(admin));
     }
+    @PostMapping("/user/favorite")
+    public Result createFavorite(@RequestParam("concreteProductID")Integer concreteProductID,@RequestParam("minimumPrice")Float minimumPrice,@RequestParam("token")String token){
+        if(concreteProductID==null||minimumPrice==null||token==null){
+            return ResultFactory.buildFailedResult("参数缺失");
+        }
+        JwtBodyData jwtBodyData= JwtParse.parse(token,VariableDefine.signature());
+        if(!jwtBodyData.getValidity().equals(VariableDefine.tokenValid())){
+            return ResultFactory.buildFailedResult("令牌失效");
+        }
+        if(!jwtBodyData.getType().equals(VariableDefine.getTypeUser())){
+            return ResultFactory.buildFailedResult("非用户操作");
+        }
+        // 判断是否有过收藏
+        if(collectRepository.getCollectByUserIDAndConcreteProductID(jwtBodyData.getId(),concreteProductID)!=null){
+            return ResultFactory.buildFailedResult("已经收藏");
+        }
+        Collect collect=new Collect();
+        collect.setUserID(jwtBodyData.getId());
+        collect.setConcreteProductID(concreteProductID);
+        Date date=new Date(System.currentTimeMillis());
+        collect.setDate(date);
+        if(minimumPrice==-1||minimumPrice>productService.getPartialProductByConcreteProductId(concreteProductID).getCurrentPrice()){
+            minimumPrice=productService.getPartialProductByConcreteProductId(concreteProductID).getCurrentPrice()-1;
+        }
+        collect.setMinimumPrice(minimumPrice);
+        // 增加收藏量
+        ConcreteProduct concreteProduct=concreteProductRepository.findById(concreteProductID).orElse(null);
+        if(concreteProduct==null){
+            return ResultFactory.buildFailedResult("商品不存在");
+        }
+        concreteProduct.setCollectNum(concreteProduct.getCollectNum()+1);
+        return ResultFactory.buildSuccessResult(collectService.save(collect));
+    }
+    @PostMapping("/user/favoritecheck")
+    public Result getFavoritesByUserID(@RequestParam("token")String token){
+        if(token==null){
+            return ResultFactory.buildFailedResult("参数缺失");
+        }
+        JwtBodyData jwtBodyData=JwtParse.parse(token,VariableDefine.signature());
+        if(!jwtBodyData.getValidity().equals(VariableDefine.tokenValid())){
+            return ResultFactory.buildFailedResult("令牌失效");
+        }
+        if(!jwtBodyData.getType().equals(VariableDefine.getTypeUser())){
+            return ResultFactory.buildFailedResult("非用户操作");
+        }
+        return ResultFactory.buildSuccessResult(collectService.getFavoritesByUserID(jwtBodyData.getId()));
+    }
+    @PostMapping("/usr/message")
+    public Result getMessage(@RequestParam("token")String token){
+        if(token==null){
+            return ResultFactory.buildFailedResult("参数缺失");
+        }
+        JwtBodyData jwtBodyData=JwtParse.parse(token,VariableDefine.signature());
+        if(!jwtBodyData.getValidity().equals(VariableDefine.tokenValid())){
+            return ResultFactory.buildFailedResult("令牌失效");
+        }
+        if(!jwtBodyData.getType().equals(VariableDefine.getTypeUser())){
+            return ResultFactory.buildFailedResult("非用户操作");
+        }
+        return ResultFactory.buildSuccessResult(messageService.getMessagesByUserID(jwtBodyData.getId()));
+    }
+
     public static boolean validPhone(String phone){
         return true;// todo
+    }
+
+    public Result createFavoriteTest(@RequestParam("concreteProductID")Integer concreteProductID, @RequestParam("minimumPrice")Float minimumPrice,Date date,Integer userId){
+        if(collectRepository.getCollectByUserIDAndConcreteProductID(userId,concreteProductID)!=null){
+            return ResultFactory.buildFailedResult("已经收藏");
+        }
+        Collect collect=new Collect();
+        collect.setUserID(userId);
+        collect.setConcreteProductID(concreteProductID);
+        collect.setDate(date);
+
+        if(minimumPrice==-1||minimumPrice>productService.getPartialProductByConcreteProductId(concreteProductID).getCurrentPrice()){
+            minimumPrice=productService.getPartialProductByConcreteProductId(concreteProductID).getCurrentPrice()-1;
+        }
+        collect.setMinimumPrice(minimumPrice);
+        // 增加收藏量
+        ConcreteProduct concreteProduct=concreteProductRepository.findById(concreteProductID).orElse(null);
+        if(concreteProduct==null){
+            return ResultFactory.buildFailedResult("商品不存在");
+        }
+        concreteProduct.setCollectNum(concreteProduct.getCollectNum()+1);
+        return ResultFactory.buildSuccessResult(collectService.save(collect));
     }
 }
 @Data
